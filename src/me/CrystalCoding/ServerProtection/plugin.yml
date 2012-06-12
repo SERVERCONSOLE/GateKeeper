@@ -1,0 +1,34 @@
+name: CrystalProtection
+main: me.CrystalCoding.ServerProtection.AthProtection
+version: 1.0
+website: athcraft.com
+author: baseball435 & Keir
+description: >
+             Allows admins to do different functions.
+commands:
+  stoplogin:
+    description: Stops players from logging in.
+    usage: |
+           /<command>
+           Example: /<command>
+  allowlogin:
+    description: Allows players to log in.
+    usage: |
+           /<command>
+           Example: /<command>
+  kickall:
+    description: Kicks everyone
+    usage: |
+           /<command> Reason
+           Example: /<command> Because i felt like it
+  muteall:
+    description: Mutes everyone
+    usage: |
+           /<command> Reason
+           Example: /<command> Because i felt like it
+
+  unmuteall:
+    description: Unmutes everyone
+    usage: |
+           /<command> 
+           Example: /<command>
