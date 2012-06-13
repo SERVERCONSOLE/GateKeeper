@@ -17,17 +17,18 @@ public class AthProtection extends JavaPlugin{
 
 	public static Server s;
 	public static final Logger log = Logger.getLogger("Minecraft");
-	
+	public static PluginDescriptionFile pdfFile;
 	/*** Variables ***/
-	public static boolean NO_LOGIN = false;
-
+	public static boolean NO_LOGIN = false, NEW = true, FREEZE_ALL = false;
+	public static ArrayList<String> frozenPlayers = new ArrayList<String>();
+	
 	public void onDisable() {
 	}
 
 	public void onEnable() {
 		s = getServer();
 		s.getPluginManager().registerEvents(new AthPlayer(), this);
-		PluginDescriptionFile pdfFile = getDescription();
+		pdfFile = getDescription();
 		log.info(pdfFile.getName() + " version " + pdfFile.getVersion() + " is enabled!");
 	}
 
@@ -44,16 +45,29 @@ public class AthProtection extends JavaPlugin{
 		
 		if ((sender instanceof Player)) {
 			Player p = (Player) sender;
-			if (comm.equalsIgnoreCase("stoplogin")) {
-				if (!isAdmin(p.getName())) {
-					p.sendMessage(ChatColor.RED + "You dont have permission to use this command.");
-					return true;
+			if (comm.equalsIgnoreCase("lockdown")) {
+				if (myArgs.length >= 1) {
+					if (!isAdmin(p.getName())) {
+						p.sendMessage(ChatColor.RED + "You dont have permission to use this command.");
+						return true;
+					} else {
+						NO_LOGIN = true;
+						if (myArgs[0].equalsIgnoreCase("new"))
+							NEW = true;
+						else if (myArgs[0].equalsIgnoreCase("old"))
+							NEW = false;
+						else {
+							p.sendMessage(ChatColor.RED + "Please type /stoplogin <new/old> - new for new players / old for old players and new");
+							return true;
+						}
+						
+						p.sendMessage(ChatColor.GREEN + "The ability to login has been disabled for " + myArgs[0] + " players.");
+						return true;
+					}
 				} else {
-					NO_LOGIN = true;
-					p.sendMessage(ChatColor.GREEN + "The ability to login has been disabled.");
-					return true;
+					p.sendMessage(ChatColor.RED + "Please type /stoplogin <new/old> - new for new players / old for old players and new");
 				}
-			} else if (comm.equalsIgnoreCase("allowlogin")) {
+			} else if (comm.equalsIgnoreCase("stoplockdown")) {
 				if (!isAdmin(p.getName())) {
 					p.sendMessage(ChatColor.RED + "You dont have permission to use this command.");
 					return true;
@@ -121,6 +135,110 @@ public class AthProtection extends JavaPlugin{
 					p.sendMessage(ChatColor.RED + "Invalid input!");
 					return false;
 				}
+			} else if (comm.equalsIgnoreCase("freezeall")) {
+				try {
+					if (!isAdmin(p.getName())) {
+						p.sendMessage(ChatColor.RED + "You dont have permission to use this command.");
+						return true;
+					}
+					
+					FREEZE_ALL = true;
+					s.broadcastMessage(ChatColor.GOLD + "The server admin has frozen everyone.");
+					p.sendMessage(ChatColor.GREEN + "You have frozen everyone.");
+					return true;
+				} catch (Exception e) {
+					p.sendMessage(ChatColor.RED + "Invalid input!");
+					return false;
+				}
+			} else if (comm.equalsIgnoreCase("unfreezeall")) {
+				try {
+					if (!isAdmin(p.getName())) {
+						p.sendMessage(ChatColor.RED + "You dont have permission to use this command.");
+						return true;
+					}
+					
+					FREEZE_ALL = false;
+					frozenPlayers.clear();
+					s.broadcastMessage(ChatColor.GOLD + "The server admin has unfrozen everyone.");
+					p.sendMessage(ChatColor.GREEN + "You have unfrozen everyone.");
+					return true;
+				} catch (Exception e) {
+					p.sendMessage(ChatColor.RED + "Invalid input!");
+					return false;
+				}
+			} else if (comm.equalsIgnoreCase("freeze")) {
+				try {
+					if (!isAdmin(p.getName())) {
+						p.sendMessage(ChatColor.RED + "You dont have permission to use this command.");
+						return true;
+					}
+					if (myArgs.length >= 1) {
+						for (Player ply : s.getOnlinePlayers()) {
+							if (ply.getName().equalsIgnoreCase(myArgs[0])) {
+								frozenPlayers.add(ply.getName());
+								ply.sendMessage(ChatColor.GOLD + "You have been frozen by the server admin.");
+								p.sendMessage(ChatColor.GREEN + "You have frozen " + myArgs[0] + ".");
+								break;
+							}
+						}
+					} else {
+						p.sendMessage(ChatColor.RED + "Please use /freeze <name>");
+					}
+					return true;
+				} catch (Exception e) {
+					p.sendMessage(ChatColor.RED + "Invalid input!");
+					return false;
+				}
+			} else if (comm.equalsIgnoreCase("unfreeze")) {
+				try {
+					if (!isAdmin(p.getName())) {
+						p.sendMessage(ChatColor.RED + "You dont have permission to use this command.");
+						return true;
+					}
+					if (myArgs.length >= 1) {
+						for (Player ply : s.getOnlinePlayers()) {
+							if (ply.getName().equalsIgnoreCase(myArgs[0])) {
+								frozenPlayers.remove(ply.getName());
+								ply.sendMessage(ChatColor.GOLD + "You have been unfrozen by the server admin.");
+								p.sendMessage(ChatColor.GREEN + "You have unfrozen " + myArgs[0] + ".");
+								return true;
+							}
+						}
+						p.sendMessage(ChatColor.RED + "That player wasn't found or isn't frozen.");
+					} else {
+						p.sendMessage(ChatColor.RED + "Please use /freeze <name>");
+					}
+					return true;
+				} catch (Exception e) {
+					p.sendMessage(ChatColor.RED + "Invalid input!");
+					return false;
+				}
+			} else if (comm.equalsIgnoreCase("stoplockdown")) {
+				if (!isAdmin(p.getName())) {
+					p.sendMessage(ChatColor.RED + "You dont have permission to use this command.");
+					return true;
+				} else {
+					NO_LOGIN = false;
+					p.sendMessage(ChatColor.GREEN + "The ability to login has been enabled.");
+					return true;
+				}
+			} else if (comm.equalsIgnoreCase("gatekeeper")) {
+				if (!isAdmin(p.getName())) {
+					p.sendMessage(ChatColor.RED + "You dont have permission to use this command.");
+					return true;
+				}
+				p.sendMessage(ChatColor.AQUA + "--------[ " + pdfFile.getName() + " ]--------");
+				p.sendMessage(ChatColor.AQUA + "---------[ Made By Baseball435 ]---------");
+				p.sendMessage(ChatColor.GOLD + "/lockdown <new/old> - Doesnt let new/old, and new, members log in");
+				p.sendMessage(ChatColor.GOLD + "/stoplockdown - Stops the lockdown");
+				p.sendMessage(ChatColor.GOLD + "/muteall - Mutes everyone without the sp.nomute node");
+				p.sendMessage(ChatColor.GOLD + "/unmuteall - Unmutes everyone");
+				p.sendMessage(ChatColor.GOLD + "/kickall - Kicks everyone without the sp.nomute node");
+				p.sendMessage(ChatColor.GOLD + "/freezeall - Freezes everyone without the sp.nofreeze node");
+				p.sendMessage(ChatColor.GOLD + "/unfreezeall - Unfreezes everyone");
+				p.sendMessage(ChatColor.GOLD + "/freeze <name> - Freeze a person by their name");
+				p.sendMessage(ChatColor.GOLD + "/unfreeze <name> - Unfreezes a person by their name");
+				return true;
 			}
  		}
 		return false;
